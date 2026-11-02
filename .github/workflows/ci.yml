@@ -1,0 +1,55 @@
+name: High-Performance C++ Pricing Engine CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    name: Build & Test (${{ matrix.compiler }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [g++-13, clang++-17]
+        build_type: [Release, RelWithDebInfo]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install dependencies & Compilers
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ninja-build cmake python3-dev
+        if [ "${{ matrix.compiler }}" = "g++-13" ]; then
+          sudo apt-get install -y g++-13
+        elif [ "${{ matrix.compiler }}" = "clang++-17" ]; then
+          sudo apt-get install -y clang-17
+        fi
+
+    - name: Configure CMake
+      env:
+        CXX: ${{ matrix.compiler }}
+      run: >
+        cmake -S . -B build 
+        -G Ninja 
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DBUILD_TESTING=ON
+        -DBUILD_BENCHMARKS=ON
+
+    - name: Build
+      run: cmake --build build -j $(nproc)
+
+    - name: Run Unit Tests
+      working-directory: build
+      run: ctest --output-on-failure -j $(nproc)
+
+    - name: Run Latency Benchmarks
+      if: matrix.build_type == 'Release'
+      working-directory: build/benchmarks
+      run: ./bench_monte_carlo --benchmark_format=console

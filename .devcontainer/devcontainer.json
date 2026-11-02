@@ -1,0 +1,36 @@
+{
+    "name": "C++ High-Performance Pricing Environment",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "llvm-vs-code-extensions.vscode-clangd",
+                "ms-vscode.cmake-tools",
+                "twxs.cmake",
+                "ms-python.python",
+                "matepek.vscode-catch2-test-adapter"
+            ],
+            "settings": {
+                "C_Cpp.intelliSenseEngine": "disabled",
+                "clangd.arguments": [
+                    "--background-index",
+                    "--compile-commands-dir=${workspaceFolder}/build",
+                    "-j=4",
+                    "--clang-tidy",
+                    "--header-insertion=iwyu"
+                ],
+                "cmake.configureOnOpen": true,
+                "cmake.generator": "Ninja"
+            }
+        }
+    },
+    "remoteUser": "vscode",
+    "features": {
+        "ghcr.io/devcontainers/features/python:1": {
+            "version": "3.13"
+        }
+    }
+}
